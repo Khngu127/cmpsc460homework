@@ -7,6 +7,7 @@ public class Lexer {
     public int lineno; // line number
     public int column; // column
     private int lexemeStartColumn; // Variable to store the start position of the lexeme
+    private int lexemeStartLine;
     private StringBuilder lexemeBuffer = new StringBuilder();
 
     public Lexer(java.io.Reader reader, Parser yyparser) throws Exception {
@@ -27,24 +28,31 @@ public class Lexer {
     public int getLexemeStartColumn() {
         return lexemeStartColumn;
     }
+    public int getLexemeStartLine(){
+        return lexemeStartLine;
+    }
     public char NextChar() {
         if (currentPos < inputBuffer.length) {
             char c = inputBuffer[currentPos++];
+            //System.out.println("Current Position: " + currentPos + ", Char: " + c);
             if (c == '\n') {
                 lineno++;
                 column = 1;
+            } else if (Character.isWhitespace(c)) {
+                column++;
             } else {
-                if (lexemeBuffer.length() ==0) {
+                if (lexemeBuffer.length() == 0) {
                     lexemeStartColumn = column; // set the lexeme start position
+                    lexemeStartLine = lineno;   // set the lexeme start line
                 }
                 column++;
             }
+            System.out.println("Char: " + c + ", line: " + lineno + ", Column: " + column);
             return c;
         } else {
             return EOF;
         }
     }
-
     public int Fail() {
         return -1;
     }
@@ -56,7 +64,7 @@ public class Lexer {
             switch (state) {
                 case 0:
                     c = NextChar();
-                    System.out.println("Char: " + c);
+                    //System.out.println("Char: " + c);
                     if (c == EOF) {
                         state = 9999;
                         continue;
@@ -83,7 +91,6 @@ public class Lexer {
                     while (Character.isLetterOrDigit(c) || c == '_') {
                         lexemeBuffer.append(c);
                         // Continue reading identifiers
-                        System.out.println("20Char: " + c);
                         c = NextChar();
                         if (!(Character.isLetterOrDigit(c) || c == '_')) {
                             // Finish reading identifiers
@@ -115,7 +122,6 @@ public class Lexer {
                 symbol == '>' || symbol == '=' || symbol == '+' ||
                 symbol == '-' || symbol == '*' || symbol == '/';
     }
-
     private int checkSymbol(char symbol) throws Exception {
         // Determine the token for a symbol
         switch (symbol) {
@@ -143,11 +149,11 @@ public class Lexer {
                 return Parser.RELOP;
             case '=':
                 return Parser.RELOP;
-            // Add cases for other symbols
             default:
                 return -1; // Not a symbol
         }
     }
+
 
     private int checkKeyword(String keyword) {
         // Determine the token for a keyword
@@ -180,4 +186,3 @@ public class Lexer {
         }
     }
 }
-
