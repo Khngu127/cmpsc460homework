@@ -65,7 +65,6 @@ public class Lexer {
                             return Fail();
                         }
                     } else if (Character.isLetter(c)) {
-                        lexemeStartColumn = column; // Set the lexeme start position
                         lexemeBuffer.append(c);
                         state = 20;
                         continue;
@@ -81,31 +80,23 @@ public class Lexer {
                         // Continue reading identifiers
                         System.out.println("20Char: " + c);
                         c = NextChar();
-                        checkKeyword(String.valueOf(c));
-                        checkSymbol(c);  // Pass the char directly
-                        System.out.println("20NextChar: " + c);
-                    }
-                    if (Character.isLetterOrDigit(c) || c == '_') {
-                        lexemeBuffer.append(c);
-                        System.out.println("2OisDigit: " + c);
-                        // Continue reading identifiers
-                    } else {
-                        // Finish reading identifiers
-                        String identifier = lexemeBuffer.toString();
-                        lexemeBuffer.setLength(0); // Clear the buffer
-                        int keywordToken = checkKeyword(identifier);
-                        if (keywordToken != -1) {
-                            yyparser.yylval = new ParserVal();
-                            yyparser.yylval.obj = identifier;
-                            return keywordToken;
-                        } else {
-                            yyparser.yylval = new ParserVal();
-                            yyparser.yylval.obj = identifier;
-                            // Return the starting column of the lexeme
-                            return lexemeStartColumn;
+                        if (!(Character.isLetterOrDigit(c) || c == '_')) {
+                            // Finish reading identifiers
+                            String identifier = lexemeBuffer.toString();
+                            lexemeBuffer.setLength(0); // Clear the buffer
+                            int keywordToken = checkKeyword(identifier);
+                            if (keywordToken != -1) {
+                                yyparser.yylval = new ParserVal();
+                                yyparser.yylval.obj = identifier;
+                                return keywordToken;
+                            } else {
+                                yyparser.yylval = new ParserVal();
+                                yyparser.yylval.obj = identifier;
+                                return Parser.ID;
+                            }
                         }
                     }
-
+                    break;
                 case 9999:
                     return 0; // EOF
             }
