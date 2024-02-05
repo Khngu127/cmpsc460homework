@@ -42,12 +42,12 @@ public class Parser {
                     return 0;
                 case -1:
                     // lexical error is found
-                    System.out.println("Error! There is a lexical error at " + lexer.lineno + ":" + lexer.column + ".");
+                    System.out.println("Error! There is a lexical error at " + lexer.lineno + ":" + lexer.getLexemeStartColumn() + ".");
                     return -1;
                 default:
                     // Print token information
                     tokenname = getTokenName(token);
-                    System.out.println("<" + tokenname + ", token-attr:\"" + attr + "\", " + lexer.lineno + ":" + lexer.column + ">");
+                    System.out.println("<" + tokenname + ", token-attr:\"" + attr + "\", " + lexer.lineno + ":" + lexer.getLexemeStartColumn() + ">");
             }
         }
     }
