@@ -7,6 +7,7 @@ public class Lexer {
     public int lineno; // line number
     public int column; // column
     private int lexemeStartColumn; // Variable to store the start position of the lexeme
+    private StringBuilder lexemeBuffer = new StringBuilder();
 
     public Lexer(java.io.Reader reader, Parser yyparser) throws Exception {
         this.yyparser = yyparser;
@@ -23,7 +24,9 @@ public class Lexer {
         inputBuffer = inputStringBuilder.toString().toCharArray();
         currentPos = 0;
     }
-
+    public int getLexemeStartColumn() {
+        return lexemeStartColumn;
+    }
     public char NextChar() {
         if (currentPos < inputBuffer.length) {
             char c = inputBuffer[currentPos++];
@@ -31,6 +34,9 @@ public class Lexer {
                 lineno++;
                 column = 1;
             } else {
+                if (lexemeBuffer.length() ==0) {
+                    lexemeStartColumn = column; // set the lexeme start position
+                }
                 column++;
             }
             return c;
@@ -45,13 +51,12 @@ public class Lexer {
 
     public int yylex() throws Exception {
         int state = 0;
-        StringBuilder lexemeBuffer = new StringBuilder(); // Added lexemeBuffer
-
         while (true) {
             char c;
             switch (state) {
                 case 0:
                     c = NextChar();
+                    System.out.println("Char: " + c);
                     if (c == EOF) {
                         state = 9999;
                         continue;
@@ -175,3 +180,4 @@ public class Lexer {
         }
     }
 }
+
