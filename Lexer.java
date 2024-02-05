@@ -6,11 +6,13 @@ public class Lexer {
     private int currentPos; // current position in the inputBuffer
     public int lineno; // line number
     public int column; // column
+    private int lexemeStartColumn; // Variable to store the start position of the lexeme
 
     public Lexer(java.io.Reader reader, Parser yyparser) throws Exception {
         this.yyparser = yyparser;
         lineno = 1;
         column = 1;
+        lexemeStartColumn = 1; // Initialize lexemeStartColumn
 
         // Read the entire program source into inputBuffer
         StringBuilder inputStringBuilder = new StringBuilder();
@@ -63,6 +65,7 @@ public class Lexer {
                             return Fail();
                         }
                     } else if (Character.isLetter(c)) {
+                        lexemeStartColumn = column; // Set the lexeme start position
                         lexemeBuffer.append(c);
                         state = 20;
                         continue;
@@ -98,7 +101,8 @@ public class Lexer {
                         } else {
                             yyparser.yylval = new ParserVal();
                             yyparser.yylval.obj = identifier;
-                            return Parser.ID;
+                            // Return the starting column of the lexeme
+                            return lexemeStartColumn;
                         }
                     }
 
