@@ -19,6 +19,7 @@ public class Parser {
     public static final int END = 27;     // end
     public static final int COLON = 28;   // :
     public static final int VAR = 29;
+    public static final int TYPEOF = 30;
 
     private Compiler compiler;
     private Lexer lexer;       // lexer.yylex() returns token-name
@@ -42,12 +43,12 @@ public class Parser {
                     return 0;
                 case -1:
                     // lexical error is found
-                    System.out.println("Error! There is a lexical error at " + lexer.lineno + ":" + lexer.getLexemeStartColumn() + ".");
+                    System.out.println("Error! There is a lexical error at " + lexer.getLexemeStartLine() + ":" + lexer.getLexemeStartColumn() + ".");
                     return -1;
                 default:
                     // Print token information
                     tokenname = getTokenName(token);
-                    System.out.println("<" + tokenname + ", token-attr:\"" + attr + "\", " + lexer.lineno + ":" + lexer.getLexemeStartColumn() + ">");
+                    System.out.println("<" + tokenname + ", token-attr:\"" + attr + "\", " + lexer.getLexemeStartLine() + ":" + lexer.getLexemeStartColumn() + ">");
             }
         }
     }
@@ -93,6 +94,8 @@ public class Parser {
                 return "END";
             case COLON:
                 return "COLON";
+            case TYPEOF:
+                return "TYPEOF";
             case VAR:
                 return "VAR";
             default:
