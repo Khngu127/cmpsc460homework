@@ -46,17 +46,6 @@ public class Parser {
                     // lexical error is found
                     System.out.println("Error! There is a lexical error at " + lexer.lineno + ":" + lexer.getLexemeStartColumn() + ".");
                     return -1;
-                case Parser.TYPEOF:
-                    // Handle TYPEOF token
-                    tokenname = getTokenName(token);
-                    System.out.println("<" + tokenname + ", token-attr:\"" + attr + "\", " + lexer.lineno + ":" + lexer.getLexemeStartColumn() + ">");
-                    break;
-
-                case Parser.LPAREN:
-                    // Handle TYPEOF token
-                    tokenname = getTokenName(token);
-                    System.out.println("<" + tokenname + ", token-attr:\"" + attr + "\", " + lexer.lineno + ":" + lexer.getLexemeStartColumn() + ">");
-                    break;
                 default:
                     // Print token information
                     tokenname = getTokenName(token);
