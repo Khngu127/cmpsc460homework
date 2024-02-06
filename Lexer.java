@@ -7,52 +7,65 @@ public class Lexer {
     public int lineno; // line number
     public int column; // column
     private int lexemeStartColumn; // Variable to store the start position of the lexeme
-    private int lexemeStartLine;
     private StringBuilder lexemeBuffer = new StringBuilder();
+
+    private static final int BUFFER_SIZE = 10;
+
+    private char[] inputBuffer1;
+    private char[] inputBuffer2;
+    private char[] currentBuffer;
+    private char[] nextBuffer;
 
     public Lexer(java.io.Reader reader, Parser yyparser) throws Exception {
         this.yyparser = yyparser;
         lineno = 1;
         column = 1;
-        lexemeStartColumn = 1; // Initialize lexemeStartColumn
+        lexemeStartColumn = 1;
 
-        // Read the entire program source into inputBuffer
         StringBuilder inputStringBuilder = new StringBuilder();
         int data;
         while ((data = reader.read()) != -1) {
             inputStringBuilder.append((char) data);
         }
-        inputBuffer = inputStringBuilder.toString().toCharArray();
+        inputBuffer1 = inputStringBuilder.toString().toCharArray();
+        inputBuffer2 = new char[BUFFER_SIZE];
+        currentBuffer = inputBuffer1;
+        nextBuffer = inputBuffer2;
         currentPos = 0;
     }
+
+    private void switchBuffers() {
+        char[] temp = currentBuffer;
+        currentBuffer = nextBuffer;
+        nextBuffer = temp;
+    }
+
     public int getLexemeStartColumn() {
         return lexemeStartColumn;
     }
-    public int getLexemeStartLine(){
-        return lexemeStartLine;
-    }
+
     public char NextChar() {
-        if (currentPos < inputBuffer.length) {
-            char c = inputBuffer[currentPos++];
-            //System.out.println("Current Position: " + currentPos + ", Char: " + c);
-            if (c == '\n') {
-                lineno++;
-                column = 1;
-            } else if (Character.isWhitespace(c)) {
-                column++;
-            } else {
-                if (lexemeBuffer.length() == 0) {
-                    lexemeStartColumn = column; // set the lexeme start position
-                    lexemeStartLine = lineno;   // set the lexeme start line
+        while (true) {
+            if (currentPos < currentBuffer.length) {
+                char c = currentBuffer[currentPos++];
+                if (c == '\n') {
+                    lineno++;
+                    column = 1; // Reset column to 1 when a newline is encountered
+                } else {
+                    if (lexemeBuffer.length() == 0) {
+                        lexemeStartColumn = column;
+                    }
+                    column++;
                 }
-                column++;
+                return c;
+            } else {
+                // Switch to the next buffer when the current buffer is exhausted
+                switchBuffers();
+                currentPos = 0;
             }
-            System.out.println("Char: " + c + ", line: " + lineno + ", Column: " + column);
-            return c;
-        } else {
-            return EOF;
         }
     }
+
     public int Fail() {
         return -1;
     }
@@ -64,20 +77,20 @@ public class Lexer {
             switch (state) {
                 case 0:
                     c = NextChar();
-                    //System.out.println("Char: " + c);
                     if (c == EOF) {
                         state = 9999;
                         continue;
                     } else if (isSymbol(c)) {
                         int symbolToken = checkSymbol(c);
                         if (symbolToken != -1) {
-                            lexemeBuffer.append(c);
-                            yyparser.yylval = new ParserVal(lexemeBuffer.toString());
+                            yyparser.yylval = new ParserVal();
+                            yyparser.yylval.obj = String.valueOf(c);
                             return symbolToken;
                         } else {
                             return Fail();
                         }
                     } else if (Character.isLetter(c)) {
+                        lexemeBuffer.setLength(0); // Clear the buffer
                         lexemeBuffer.append(c);
                         state = 20;
                         continue;
@@ -86,16 +99,26 @@ public class Lexer {
                     } else {
                         return Fail();
                     }
-                case 20: // State for reading identifiers
+                case 10: // State for reading ":"
+                    c = NextChar();
+                    if (c == ':') {
+                        // Handle "::" as a single token
+                        lexemeBuffer.append("::");
+                        return Parser.TYPEOF;
+                    } else {
+                        currentPos--;
+                        lexemeBuffer.append(":");
+                        return Parser.COLON;
+                    }
+                case 20: // State for reading ":="
                     c = NextChar();
                     while (Character.isLetterOrDigit(c) || c == '_') {
                         lexemeBuffer.append(c);
-                        // Continue reading identifiers
                         c = NextChar();
                         if (!(Character.isLetterOrDigit(c) || c == '_')) {
-                            // Finish reading identifiers
                             String identifier = lexemeBuffer.toString();
                             lexemeBuffer.setLength(0); // Clear the buffer
+
                             int keywordToken = checkKeyword(identifier);
                             if (keywordToken != -1) {
                                 yyparser.yylval = new ParserVal();
@@ -108,7 +131,8 @@ public class Lexer {
                             }
                         }
                     }
-                    break;
+                    currentPos--;
+                    return Parser.COLON;
                 case 9999:
                     return 0; // EOF
             }
@@ -122,6 +146,7 @@ public class Lexer {
                 symbol == '>' || symbol == '=' || symbol == '+' ||
                 symbol == '-' || symbol == '*' || symbol == '/';
     }
+
     private int checkSymbol(char symbol) throws Exception {
         // Determine the token for a symbol
         switch (symbol) {
@@ -129,31 +154,54 @@ public class Lexer {
                 return Parser.LPAREN;
             case ')':
                 return Parser.RPAREN;
-            case ':':
-                return Parser.COLON;
             case ';':
                 return Parser.SEMI;
             case ',':
                 return Parser.COMMA;
             case '+':
-                return Parser.OP;
             case '-':
-                return Parser.OP;
             case '*':
-                return Parser.OP;
             case '/':
                 return Parser.OP;
             case '<':
-                return Parser.RELOP;
             case '>':
-                return Parser.RELOP;
+                char nextChar = NextChar();
+                if (nextChar == '=') {
+                    lexemeBuffer.append(symbol);
+                    lexemeBuffer.append('=');
+                    yyparser.yylval = new ParserVal(lexemeBuffer.toString());
+                    return Parser.RELOP;
+                } else {
+                    currentPos--; // Rewind the position if it's not "<=" or ">="
+                    return Parser.RELOP;
+                }
             case '=':
-                return Parser.RELOP;
+                nextChar = NextChar();
+                if (nextChar == '=') {
+                    lexemeBuffer.append(symbol);
+                    lexemeBuffer.append('=');
+                    yyparser.yylval = new ParserVal(lexemeBuffer.toString());
+                    return Parser.RELOP;
+                } else {
+                    currentPos--; // Rewind the position if it's not "=="
+                    return Parser.ASSIGN;
+                }
+            case ':':
+                nextChar = NextChar();
+                if (nextChar == ':') {
+                    // Handle "::" as a single token
+                    lexemeBuffer.append("::");
+                    return Parser.TYPEOF;
+                } else {
+                    // Handle ":" as a separate token
+                    currentPos--;
+                    lexemeBuffer.append(":");
+                    return Parser.COLON;
+                }
             default:
                 return -1; // Not a symbol
         }
     }
-
 
     private int checkKeyword(String keyword) {
         // Determine the token for a keyword
@@ -180,9 +228,8 @@ public class Lexer {
                 return Parser.BEGIN;
             case "end":
                 return Parser.END;
-            // Add cases for other keywords
             default:
-                return -1; // Not a keyword
+                return Parser.ID;
         }
     }
 }
