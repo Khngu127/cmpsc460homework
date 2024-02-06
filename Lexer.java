@@ -69,20 +69,20 @@ public class Lexer {
     public int Fail() {
         return -1;
     }
-
     public int yylex() throws Exception {
         int state = 0;
+        char c;
+
         while (true) {
-            char c;
             switch (state) {
                 case 0:
                     c = NextChar();
                     if (c == EOF) {
                         state = 9999;
-                        continue;
                     } else if (isSymbol(c)) {
                         int symbolToken = checkSymbol(c);
                         if (symbolToken != -1) {
+                            System.out.println("symboltokenChar: " + c + ", Line: " + lineno + ", Column: " + column);
                             yyparser.yylval = new ParserVal();
                             yyparser.yylval.obj = String.valueOf(c);
                             return symbolToken;
@@ -90,49 +90,59 @@ public class Lexer {
                             return Fail();
                         }
                     } else if (Character.isLetter(c)) {
+                        System.out.println("isletterChar: " + c + ", Line: " + lineno + ", Column: " + column);
                         lexemeBuffer.setLength(0); // Clear the buffer
                         lexemeBuffer.append(c);
                         state = 20;
-                        continue;
                     } else if (Character.isWhitespace(c)) {
-                        continue;
+                        System.out.println("iswhitespaceChar: " + c + ", Line: " + lineno + ", Column: " + column);
                     } else {
                         return Fail();
                     }
-                case 10: // State for reading ":"
-                    c = NextChar();
-                    if (c == ':') {
-                        // Handle "::" as a single token
-                        lexemeBuffer.append("::");
-                        return Parser.TYPEOF;
-                    } else {
-                        currentPos--;
-                        lexemeBuffer.append(":");
-                        return Parser.COLON;
-                    }
+                    break;
                 case 20: // State for reading ":="
                     c = NextChar();
+                    System.out.println("case20Char: " + c + ", Line: " + lineno + ", Column: " + column);
                     while (Character.isLetterOrDigit(c) || c == '_') {
+                        System.out.println("c20isLODChar: " + c + ", Line: " + lineno + ", Column: " + column);
                         lexemeBuffer.append(c);
                         c = NextChar();
+                        if (c == '(') {
+                            System.out.println("LPARENChar: " + c + ", Line: " + lineno + ", Column: " + column);
+                            yyparser.yylval = new ParserVal(String.valueOf(c));
+                            return Parser.LPAREN;
+                        } else if (c == ')') {
+                            System.out.println("RPARENChar: " + c + ", Line: " + lineno + ", Column: " + column);
+                            yyparser.yylval = new ParserVal(String.valueOf(c));
+                            return Parser.RPAREN;
+                        }
+                        System.out.println("c20isLODafterChar: " + c + ", Line: " + lineno + ", Column: " + column);
                         if (!(Character.isLetterOrDigit(c) || c == '_')) {
+                            System.out.println("c20isnotLODChar: " + c + ", Line: " + lineno + ", Column: " + column);
                             String identifier = lexemeBuffer.toString();
                             lexemeBuffer.setLength(0); // Clear the buffer
 
                             int keywordToken = checkKeyword(identifier);
                             if (keywordToken != -1) {
+                                System.out.println("c20KeywordTokenChar: " + c + ", Line: " + lineno + ", Column: " + column);
                                 yyparser.yylval = new ParserVal();
                                 yyparser.yylval.obj = identifier;
                                 return keywordToken;
                             } else {
+                                System.out.println("C20ELSEChar: " + c + ", Line: " + lineno + ", Column: " + column);
                                 yyparser.yylval = new ParserVal();
                                 yyparser.yylval.obj = identifier;
                                 return Parser.ID;
                             }
+                        } else if (isSymbol(c)) {
+                            checkSymbol(c);
                         }
                     }
                     currentPos--;
-                    return Parser.COLON;
+                    yyparser.yylval = new ParserVal();
+                    yyparser.yylval.obj = lexemeBuffer.toString();
+                    return Parser.ID;
+
                 case 9999:
                     return 0; // EOF
             }
@@ -159,14 +169,20 @@ public class Lexer {
             case ',':
                 return Parser.COMMA;
             case '+':
+                return Parser.OP;
             case '-':
+                return Parser.OP;
             case '*':
+                return Parser.OP;
             case '/':
                 return Parser.OP;
             case '<':
+                return Parser.RELOP;
             case '>':
+                System.out.println("ArrowRightChar: " + symbol + ", Line: " + lineno + ", Column: " + column);
                 char nextChar = NextChar();
                 if (nextChar == '=') {
+                    System.out.println("RELOPChar: " + symbol + ", Line: " + lineno + ", Column: " + column);
                     lexemeBuffer.append(symbol);
                     lexemeBuffer.append('=');
                     yyparser.yylval = new ParserVal(lexemeBuffer.toString());
@@ -176,8 +192,10 @@ public class Lexer {
                     return Parser.RELOP;
                 }
             case '=':
+                System.out.println("EQChar: " + symbol + ", Line: " + lineno + ", Column: " + column);
                 nextChar = NextChar();
                 if (nextChar == '=') {
+                    System.out.println("EQUALChar: " + symbol + ", Line: " + lineno + ", Column: " + column);
                     lexemeBuffer.append(symbol);
                     lexemeBuffer.append('=');
                     yyparser.yylval = new ParserVal(lexemeBuffer.toString());
@@ -187,13 +205,22 @@ public class Lexer {
                     return Parser.ASSIGN;
                 }
             case ':':
+                currentPos--;
+                System.out.println("COLONChar: " + symbol + ", Line: " + lineno + ", Column: " + column);
                 nextChar = NextChar();
                 if (nextChar == ':') {
                     // Handle "::" as a single token
+                    System.out.println("TYPEOFChar: " + symbol + ", Line: " + lineno + ", Column: " + column);
                     lexemeBuffer.append("::");
                     return Parser.TYPEOF;
-                } else {
+                } else if (nextChar == '=') {
+                    System.out.println("AssignChar: " + symbol + ", Line: " +lineno + ", Column: " + column);
+                    lexemeBuffer.append(":=");
+                    return Parser.ASSIGN;
+                }
+                else {
                     // Handle ":" as a separate token
+                    System.out.println("finalcolChar: " + symbol + ", Line: " + lineno + ", Column: " + column);
                     currentPos--;
                     lexemeBuffer.append(":");
                     return Parser.COLON;
@@ -228,8 +255,10 @@ public class Lexer {
                 return Parser.BEGIN;
             case "end":
                 return Parser.END;
-            default:
+            case "id":
                 return Parser.ID;
+            default:
+                return -1;
         }
     }
 }
