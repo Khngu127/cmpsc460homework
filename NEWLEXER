@@ -1,0 +1,287 @@
+import java.io.Reader;
+
+/*
+ *
+ *
+ *
+ *
+ *
+ */
+public class Lexer {
+    private static final char EOF = 0;
+    private Parser yyparser;
+    private int currentPos; // current position in the inputBuffer
+    public int lineNum; // line number
+    public int column; // column
+    private int startColumn;
+    private int currentColumn;
+    private StringBuilder lexeme = new StringBuilder();
+
+    private static final int BUFFER_SIZE = 10;
+
+    private char[] inputBuffer1;
+    private char[] inputBuffer2;
+    private char[] currentBuffer;
+    private char[] nextBuffer;
+
+    public Lexer(Reader reader, Parser yyparser) throws Exception {
+        this.yyparser = yyparser;
+        lineNum = 1;
+        column = 1;
+
+        StringBuilder inputStringBuilder = new StringBuilder();
+        int data;
+        while ((data = reader.read()) != -1) {
+            inputStringBuilder.append((char) data);
+        }
+        inputBuffer1 = inputStringBuilder.toString().toCharArray();
+        inputBuffer2 = new char[BUFFER_SIZE];
+        currentBuffer = inputBuffer1;
+        nextBuffer = inputBuffer2;
+        currentPos = 0;
+    }
+    public int getColumn(){
+        return column;
+    }
+    public char NextChar() {
+        while (true) {
+            if (currentPos < currentBuffer.length) {
+                char c = currentBuffer[currentPos++];
+                System.out.println("BufferChar: " + c + ", Lineno: " + lineNum + " Column: " + column);
+                if (c == '\n') {
+                    //System.out.println("NEWLINE");
+                    lineNum++;
+                    column = 1; // Reset column to 1 when a newline is encountered
+                    continue;
+                } else if (Character.isWhitespace(c)) {
+                    // Skip whitespace characters and continue with the next character
+                    //System.out.println("Whitespace");
+                    column++;
+                    continue;
+                } else if (c == ':') {
+                    //System.out.println("Character: " + c);
+                    yyparser.yylval = new ParserVal();
+                    yyparser.yylval.obj = lexeme.toString(); // Set yylval.obj to a new instance
+                    return c;
+                } else if (c == '=') {
+                    //System.out.println("Chara: " + c);
+                    yyparser.yylval = new ParserVal();
+                    yyparser.yylval.obj = lexeme.toString(); // Set yylval.obj to a new instance
+                    return c;
+                } else {
+                    if (lexeme.length() == 0) {
+                        startColumn = column;
+                    }
+                    column++;
+                    yyparser.yylval = new ParserVal();
+                    yyparser.yylval.obj = lexeme.toString(); // Set yylval.obj to a new instance
+                }
+                //System.out.println("LASTPRINT");
+                return c;
+            } else {
+                // Switch to the next buffer when the current buffer is exhausted
+                switchBuffers();
+                if (currentPos < currentBuffer.length) {
+                    char c = currentBuffer[currentPos++];
+                    System.out.println("CurrnBFF" + c);
+                    lexeme.append(c);
+                    yyparser.yylval = new ParserVal(lexeme.toString()); // Set yylval.obj to a new instance
+                    return c;
+                } else {
+                    if (currentBuffer == inputBuffer1 && currentPos == inputBuffer1.length) {
+                        System.out.println("Success!");
+                        return Parser.SUCCESS;
+                    } else {
+                        System.out.println("Reached the end");
+                        return Parser.END;
+                    }
+                }
+            }
+        }
+    }
+
+
+    private void switchBuffers() {
+        char[] temp = currentBuffer;
+        currentBuffer = nextBuffer;
+        nextBuffer = temp;
+    }
+    public char PeekChar() {
+        int peekPos = currentPos; // Use the current position
+        char peekChar = 0;
+
+        while (true) {
+            if (peekPos < currentBuffer.length) {
+                peekChar = currentBuffer[peekPos];
+                if (peekChar == '\n') {
+                    // If a newline is encountered while peeking, move to the next buffer
+                    return '\n';
+                } else if (Character.isWhitespace(peekChar)) {
+                    // Skip whitespace characters and continue with the next character
+                    peekPos++;
+                    continue;
+                }
+                return peekChar; // Return the character one position ahead
+            } else {
+                // Switch to the next buffer when the current buffer is exhausted
+                char[] temp = currentBuffer;
+                currentBuffer = nextBuffer;
+                nextBuffer = temp;
+                peekPos = 0;
+            }
+        }
+    }
+
+    public int yylex() throws Exception {
+        char ch = NextChar();
+
+        while (true) {
+            //System.out.println("Char: " + ch + ", Lineno: " + lineNum + "Column: " + column);
+            //System.out.println("Peekaboo: " + PeekChar() + ", Lineno: " + lineNum + "Column: " + column);
+            switch (ch) {
+                case EOF:
+                    return 0;
+                case ';':
+                    lexeme.append(ch);
+                    return Parser.SEMI;
+
+                case '+':
+                    lexeme.append(ch);
+                    return Parser.OP;
+
+                case '-':
+                    lexeme.append(ch);
+                    return Parser.OP;
+
+                case '*':
+                    lexeme.append(ch);
+                    return Parser.OP;
+
+                case '/':
+                    if (PeekChar() == '/') {
+                        do {
+                            ch = NextChar();
+                        } while (ch != '\n' && ch != EOF); // Skip until end of line or file
+                        continue; // Continue with the next iteration of the loop to process the next line or token
+                    }
+                    lexeme.append(ch);
+                    return Parser.OP;
+
+                case '<':
+                    if (PeekChar() == '=') {
+                        NextChar();
+                        lexeme.append("<=");
+                    } else if (PeekChar() == '>') {
+                        NextChar();
+                        lexeme.append("<>");
+                    } else {
+                        lexeme.append("<");
+                    }
+                    return Parser.RELOP;
+
+                case '>':
+                    if (PeekChar() == '=') {
+                        NextChar();
+                        lexeme.append(">=");
+                    } else {
+                        lexeme.append(">");
+                    }
+                    return Parser.RELOP;
+
+                case '(':
+                    lexeme.append(ch);
+                    return Parser.LPAREN;
+
+                case ')':
+                    lexeme.append(ch);
+                    return Parser.RPAREN;
+
+                case ',':
+                    lexeme.append(ch);
+                    return Parser.COMMA;
+
+                case '=':
+                    lexeme.append(ch);
+                    return Parser.RELOP;
+
+                case ':':
+                    if (PeekChar() == '=') {
+                        //System.out.println("PeekC: " + PeekChar());
+                        NextChar();
+                        lexeme.append(":=");
+                        return Parser.ASSIGN;
+                    } else if (PeekChar() == ':') {
+                        //System.out.println("PEP: " + PeekChar());
+                        NextChar();
+                        lexeme.append("::");
+                        return Parser.TYPEOF;
+                    } else {
+                        return -1;
+                    }
+
+                default:
+                    if (ch == '_') { // Check if character is underscore
+                        return -1;
+                    } else if (Character.isLetter(ch)) {
+                        lexeme.setLength(0);
+                        lexeme.append(ch);
+                        while (Character.isLetterOrDigit(PeekChar()) || PeekChar() == '_') {
+                            lexeme.append(NextChar());
+                        }
+
+                        String identifier = lexeme.toString();
+                        switch (identifier) {
+                            case "int":
+                                return Parser.INT;
+                            case "print":
+                                return Parser.PRINT;
+                            case "var":
+                                return Parser.VAR;
+                            case "func":
+                                return Parser.FUNC;
+                            case "if":
+                                return Parser.IF;
+                            case "then":
+                                return Parser.THEN;
+                            case "else":
+                                return Parser.ELSE;
+                            case "while":
+                                return Parser.WHILE;
+                            case "void":
+                                return Parser.VOID;
+                            case "begin":
+                                return Parser.BEGIN;
+                            case "end":
+                                return Parser.END;
+                            default:
+                                return Parser.ID;
+                        }
+
+                    } else if (Character.isDigit(ch)) {
+                        // Read a number
+                        lexeme.append(ch);
+                        startColumn = currentColumn;
+                        boolean isFloat = false;
+                        while (Character.isDigit(PeekChar()) || PeekChar() == '.') {
+                            char nextChar = NextChar();
+                            lexeme.append(nextChar);
+                            currentColumn++;
+                            if (nextChar == '.') {
+                                if (isFloat) {
+                                    return -1;
+                                }
+                                isFloat = true;
+                            }
+                        }
+                        if (isFloat && lexeme.charAt(lexeme.length() - 1) == '.') {
+                            return -1;
+                        }
+                        return Parser.NUM;
+
+                    } else {
+                        return -1;
+                    }
+            }
+        }
+    }
+}
