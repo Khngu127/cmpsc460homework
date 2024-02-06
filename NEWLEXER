@@ -60,21 +60,18 @@ public class Lexer {
                     continue;
                 } else if (c == ':') {
                     //System.out.println("Character: " + c);
-                    yyparser.yylval = new ParserVal();
-                    yyparser.yylval.obj = lexeme.toString(); // Set yylval.obj to a new instance
+                    yyparser.yylval.obj = String.valueOf(c); // Set yylval.obj to a new instance
                     return c;
                 } else if (c == '=') {
                     //System.out.println("Chara: " + c);
-                    yyparser.yylval = new ParserVal();
-                    yyparser.yylval.obj = lexeme.toString(); // Set yylval.obj to a new instance
+                    yyparser.yylval.obj = String.valueOf(c); // Set yylval.obj to a new instance
                     return c;
                 } else {
                     if (lexeme.length() == 0) {
                         startColumn = column;
                     }
                     column++;
-                    yyparser.yylval = new ParserVal();
-                    yyparser.yylval.obj = lexeme.toString(); // Set yylval.obj to a new instance
+                    yyparser.yylval.obj = String.valueOf(c); // Set yylval.obj to a new instance
                 }
                 //System.out.println("LASTPRINT");
                 return c;
@@ -83,9 +80,7 @@ public class Lexer {
                 switchBuffers();
                 if (currentPos < currentBuffer.length) {
                     char c = currentBuffer[currentPos++];
-                    System.out.println("CurrnBFF" + c);
-                    lexeme.append(c);
-                    yyparser.yylval = new ParserVal(lexeme.toString()); // Set yylval.obj to a new instance
+                    yyparser.yylval.obj = String.valueOf(c); // Set yylval.obj to a new instance
                     return c;
                 } else {
                     if (currentBuffer == inputBuffer1 && currentPos == inputBuffer1.length) {
@@ -136,8 +131,8 @@ public class Lexer {
         char ch = NextChar();
 
         while (true) {
-            //System.out.println("Char: " + ch + ", Lineno: " + lineNum + "Column: " + column);
-            //System.out.println("Peekaboo: " + PeekChar() + ", Lineno: " + lineNum + "Column: " + column);
+            System.out.println("Char: " + ch + ", Lineno: " + lineNum + "Column: " + column);
+            System.out.println("Peekaboo: " + PeekChar() + ", Lineno: " + lineNum + "Column: " + column);
             switch (ch) {
                 case EOF:
                     return 0;
@@ -232,28 +227,52 @@ public class Lexer {
                         String identifier = lexeme.toString();
                         switch (identifier) {
                             case "int":
+                                yyparser.yylval = new ParserVal();
+                                yyparser.yylval.obj = lexeme.toString(); // Set yylval.obj to a new instance
                                 return Parser.INT;
                             case "print":
+                                yyparser.yylval = new ParserVal();
+                                yyparser.yylval.obj = lexeme.toString(); // Set yylval.obj to a new instance
                                 return Parser.PRINT;
                             case "var":
+                                yyparser.yylval = new ParserVal();
+                                yyparser.yylval.obj = lexeme.toString(); // Set yylval.obj to a new instance
                                 return Parser.VAR;
                             case "func":
+                                yyparser.yylval = new ParserVal();
+                                yyparser.yylval.obj = lexeme.toString(); // Set yylval.obj to a new instance
                                 return Parser.FUNC;
                             case "if":
+                                yyparser.yylval = new ParserVal();
+                                yyparser.yylval.obj = lexeme.toString(); // Set yylval.obj to a new instance
                                 return Parser.IF;
                             case "then":
+                                yyparser.yylval = new ParserVal();
+                                yyparser.yylval.obj = lexeme.toString(); // Set yylval.obj to a new instance
                                 return Parser.THEN;
                             case "else":
+                                yyparser.yylval = new ParserVal();
+                                yyparser.yylval.obj = lexeme.toString(); // Set yylval.obj to a new instance
                                 return Parser.ELSE;
                             case "while":
+                                yyparser.yylval = new ParserVal();
+                                yyparser.yylval.obj = lexeme.toString(); // Set yylval.obj to a new instance
                                 return Parser.WHILE;
                             case "void":
+                                yyparser.yylval = new ParserVal();
+                                yyparser.yylval.obj = lexeme.toString(); // Set yylval.obj to a new instance
                                 return Parser.VOID;
                             case "begin":
+                                yyparser.yylval = new ParserVal();
+                                yyparser.yylval.obj = lexeme.toString(); // Set yylval.obj to a new instance
                                 return Parser.BEGIN;
                             case "end":
+                                yyparser.yylval = new ParserVal();
+                                yyparser.yylval.obj = lexeme.toString(); // Set yylval.obj to a new instance
                                 return Parser.END;
                             default:
+                                yyparser.yylval = new ParserVal();
+                                yyparser.yylval.obj = lexeme.toString(); // Set yylval.obj to a new instance
                                 return Parser.ID;
                         }
 
