@@ -6,24 +6,24 @@
  *
  */
 public class Parser {
-    public static final int OP = 10;      // +  -  *  /
-    public static final int RELOP = 11;   // <  >  <=  >=  ...
-    public static final int LPAREN = 12;  // (
-    public static final int RPAREN = 13;  // )
-    public static final int SEMI = 14;    // ;
-    public static final int COMMA = 15;   // ,
-    public static final int INT = 16;     // int
-    public static final int NUM = 17;     // number
-    public static final int ID = 18;      // identifier
-    public static final int PRINT = 19;   // print
-    public static final int VOID = 20;    // void
-    public static final int FUNC = 21;    // func
-    public static final int IF = 22;      // if
-    public static final int THEN = 23;    // then
-    public static final int ELSE = 24;    // else
-    public static final int WHILE = 25;   // while
-    public static final int BEGIN = 26;   // begin
-    public static final int END = 27;     // end
+    public static final int OP = 10;
+    public static final int RELOP = 11;
+    public static final int LPAREN = 12;
+    public static final int RPAREN = 13;
+    public static final int SEMI = 14;
+    public static final int COMMA = 15;
+    public static final int INT = 16;
+    public static final int NUM = 17;
+    public static final int ID = 18;
+    public static final int PRINT = 19;
+    public static final int VOID = 20;
+    public static final int FUNC = 21;
+    public static final int IF = 22;
+    public static final int THEN = 23;
+    public static final int ELSE = 24;
+    public static final int WHILE = 25;
+    public static final int BEGIN = 26;
+    public static final int END = 27;
     public static final int VAR = 29;
     public static final int TYPEOF = 30;
     public static final int ASSIGN = 31;
@@ -35,7 +35,7 @@ public class Parser {
 
     private Compiler compiler;
     private Lexer lexer;
-    public ParserVal yylval = new ParserVal(); // Initialize yylval
+    public ParserVal yylval = new ParserVal();
 
     public Parser(java.io.Reader r, Compiler compiler) throws Exception {
         this.compiler = compiler;
@@ -82,7 +82,6 @@ public class Parser {
                     System.out.println("Success!");
                     return SUCCESS;
                 case -1:
-                    // lexical error
                     System.out.println("Error! There is a lexical error at " + lexer.lineNum + ":" + tokenStartColumn + ".");
                     return -1;
             }
@@ -90,7 +89,6 @@ public class Parser {
     }
 
         public String getTokenName ( int token){
-            // Return the string representation of a token
             switch (token) {
                 case OP:
                     return "OP";
