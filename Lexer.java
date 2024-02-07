@@ -10,9 +10,9 @@ import java.io.Reader;
 public class Lexer {
     private static final char EOF = 0;
     private Parser yyparser;
-    private int CLocation;
-    public int lineNum;
-    public int column;
+    private int CLocation; // current position in the inputBuffer
+    public int lineNum; // line number
+    public int column; // column
     private int startColumn;
     private int currColumn;
     private StringBuilder LexerBuffer = new StringBuilder();
@@ -47,40 +47,44 @@ public class Lexer {
         while (true) {
             if (CLocation < CurrBuffer.length) {
                 char c = CurrBuffer[CLocation++];
-                System.out.println("BufferChar: " + c + ", Lineno: " + lineNum + " Column: " + column);
                 if (c == '\n') {
+                    //System.out.println("NEWLINE");
                     lineNum++;
-                    column = 1;
+                    column = 1; // Reset column to 1 when a newline is encountered
                     continue;
                 } else if (Character.isWhitespace(c)) {
+                    // Skip whitespace characters and continue with the next character
+                    //System.out.println("Whitespace");
                     column++;
                     continue;
                 } else if (c == ':') {
-                    yyparser.yylval.obj = String.valueOf(c);
+                    //System.out.println("Character: " + c);
+                    yyparser.yylval.obj = String.valueOf(c); // Set yylval.obj to a new instance
                     return c;
                 } else if (c == '=') {
-                    yyparser.yylval.obj = String.valueOf(c);
+                    //System.out.println("Chara: " + c);
+                    yyparser.yylval.obj = String.valueOf(c); // Set yylval.obj to a new instance
                     return c;
                 } else {
                     if (LexerBuffer.length() == 0) {
                         startColumn = column;
                     }
                     column++;
-                    yyparser.yylval.obj = String.valueOf(c);
+                    yyparser.yylval.obj = String.valueOf(c); // Set yylval.obj to a new instance
                 }
+                //System.out.println("LASTPRINT");
                 return c;
             } else {
+                // Switch to the next buffer when the current buffer is exhausted
                 switchBuffers();
                 if (CLocation < CurrBuffer.length) {
                     char c = CurrBuffer[CLocation++];
-                    yyparser.yylval.obj = String.valueOf(c);
+                    yyparser.yylval.obj = String.valueOf(c); // Set yylval.obj to a new instance
                     return c;
                 } else {
                     if (CurrBuffer == inputBuffer1 && CLocation == inputBuffer1.length) {
-                        System.out.println("Success!");
                         return Parser.SUCCESS;
                     } else {
-                        System.out.println("Reached the end");
                         return Parser.END;
                     }
                 }
@@ -95,20 +99,23 @@ public class Lexer {
         nextBuffer = temp;
     }
     public char PeekChar() {
-        int peekPos = CLocation;
+        int peekPos = CLocation; // Use the current position
         char peekChar = 0;
 
         while (true) {
             if (peekPos < CurrBuffer.length) {
                 peekChar = CurrBuffer[peekPos];
                 if (peekChar == '\n') {
+                    // If a newline is encountered while peeking, move to the next buffer
                     return '\n';
                 } else if (Character.isWhitespace(peekChar)) {
+                    // Skip whitespace characters and continue with the next character
                     peekPos++;
                     continue;
                 }
-                return peekChar;
+                return peekChar; // Return the character one position ahead
             } else {
+                // Switch to the next buffer when the current buffer is exhausted
                 char[] temp = CurrBuffer;
                 CurrBuffer = nextBuffer;
                 nextBuffer = temp;
@@ -121,6 +128,8 @@ public class Lexer {
         char ch = NextChar();
 
         while (true) {
+            System.out.println("Char: " + ch + ", Lineno: " + lineNum + ", Column: " + column);
+            System.out.println("Peekaboo: " + PeekChar() + ", Lineno: " + lineNum + "Column: " + column);
             switch (ch) {
                 case EOF:
                     return 0;
@@ -144,8 +153,8 @@ public class Lexer {
                     if (PeekChar() == '/') {
                         do {
                             ch = NextChar();
-                        } while (ch != '\n' && ch != EOF);
-                        continue;
+                        } while (ch != '\n' && ch != EOF); // Skip until end of line or file
+                        continue; // Continue with the next iteration of the loop to process the next line or token
                     }
                     LexerBuffer.append(ch);
                     return Parser.OP;
@@ -214,55 +223,56 @@ public class Lexer {
                         switch (identifier) {
                             case "int":
                                 yyparser.yylval = new ParserVal();
-                                yyparser.yylval.obj = LexerBuffer.toString();
+                                yyparser.yylval.obj = LexerBuffer.toString(); // Set yylval.obj to a new instance
                                 return Parser.INT;
                             case "print":
                                 yyparser.yylval = new ParserVal();
-                                yyparser.yylval.obj = LexerBuffer.toString();
+                                yyparser.yylval.obj = LexerBuffer.toString(); // Set yylval.obj to a new instance
                                 return Parser.PRINT;
                             case "var":
                                 yyparser.yylval = new ParserVal();
-                                yyparser.yylval.obj = LexerBuffer.toString();
+                                yyparser.yylval.obj = LexerBuffer.toString(); // Set yylval.obj to a new instance
                                 return Parser.VAR;
                             case "func":
                                 yyparser.yylval = new ParserVal();
-                                yyparser.yylval.obj = LexerBuffer.toString();
+                                yyparser.yylval.obj = LexerBuffer.toString(); // Set yylval.obj to a new instance
                                 return Parser.FUNC;
                             case "if":
                                 yyparser.yylval = new ParserVal();
-                                yyparser.yylval.obj = LexerBuffer.toString();
+                                yyparser.yylval.obj = LexerBuffer.toString(); // Set yylval.obj to a new instance
                                 return Parser.IF;
                             case "then":
                                 yyparser.yylval = new ParserVal();
-                                yyparser.yylval.obj = LexerBuffer.toString();
+                                yyparser.yylval.obj = LexerBuffer.toString(); // Set yylval.obj to a new instance
                                 return Parser.THEN;
                             case "else":
                                 yyparser.yylval = new ParserVal();
-                                yyparser.yylval.obj = LexerBuffer.toString();
+                                yyparser.yylval.obj = LexerBuffer.toString(); // Set yylval.obj to a new instance
                                 return Parser.ELSE;
                             case "while":
                                 yyparser.yylval = new ParserVal();
-                                yyparser.yylval.obj = LexerBuffer.toString();
+                                yyparser.yylval.obj = LexerBuffer.toString(); // Set yylval.obj to a new instance
                                 return Parser.WHILE;
                             case "void":
                                 yyparser.yylval = new ParserVal();
-                                yyparser.yylval.obj = LexerBuffer.toString();
+                                yyparser.yylval.obj = LexerBuffer.toString(); // Set yylval.obj to a new instance
                                 return Parser.VOID;
                             case "begin":
                                 yyparser.yylval = new ParserVal();
-                                yyparser.yylval.obj = LexerBuffer.toString();
+                                yyparser.yylval.obj = LexerBuffer.toString(); // Set yylval.obj to a new instance
                                 return Parser.BEGIN;
                             case "end":
                                 yyparser.yylval = new ParserVal();
-                                yyparser.yylval.obj = LexerBuffer.toString();
+                                yyparser.yylval.obj = LexerBuffer.toString(); // Set yylval.obj to a new instance
                                 return Parser.END;
                             default:
                                 yyparser.yylval = new ParserVal();
-                                yyparser.yylval.obj = LexerBuffer.toString();
+                                yyparser.yylval.obj = LexerBuffer.toString(); // Set yylval.obj to a new instance
                                 return Parser.ID;
                         }
 
                     } else if (Character.isDigit(ch)) {
+                        // Read a number
                         LexerBuffer.append(ch);
                         startColumn = currColumn;
                         boolean isFloat = false;
