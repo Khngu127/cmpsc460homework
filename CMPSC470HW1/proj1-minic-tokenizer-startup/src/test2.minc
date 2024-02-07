@@ -1,4 +1,0 @@
-func main::void()
-begin
-    print a;
-end
