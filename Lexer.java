@@ -128,8 +128,6 @@ public class Lexer {
         char ch = NextChar();
 
         while (true) {
-            System.out.println("Char: " + ch + ", Lineno: " + lineNum + ", Column: " + column);
-            System.out.println("Peekaboo: " + PeekChar() + ", Lineno: " + lineNum + "Column: " + column);
             switch (ch) {
                 case EOF:
                     return 0;
@@ -293,10 +291,11 @@ public class Lexer {
                         return Parser.NUM;
 
                     } else {
-                        if (CurrBuffer == inputBuffer1 && CLocation == inputBuffer1.length) {
-                            return Parser.SUCCESS;
+                        if ((CurrBuffer == inputBuffer1 && CLocation >= inputBuffer1.length) ||
+                                (CurrBuffer == inputBuffer2 && CLocation >= inputBuffer2.length)) {
+                            return Parser.SUCCESS; // Reached end of input buffer
                         } else {
-                            return -1;
+                            return -1; // End of input but not marked as success
                         }
                     }
             }
