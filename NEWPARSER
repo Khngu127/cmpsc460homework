@@ -1,9 +1,9 @@
 /*
-*
-*
-*
-*
-*
+ * Khoa Nguyen
+ * Affin Malik
+ *
+ *
+ *
  */
 public class Parser {
     public static final int OP = 10;      // +  -  *  /
@@ -67,6 +67,8 @@ public class Parser {
                 case VOID:
                 case BEGIN:
                 case END:
+                    System.out.println("<" + getTokenName(token) + ", token-attr:" + attr + ", " + lexer.lineNum + ":" + (tokenStartColumn) + ">");
+                    break;
                 case ASSIGN:
                     System.out.println("<" + getTokenName(token) + ", token-attr:" + attr + ", " + lexer.lineNum + ":" + (tokenStartColumn) + ">");
                     break;
